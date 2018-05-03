@@ -3,6 +3,7 @@
 
 using HoloToolkit.Unity.InputModule;
 using HoloToolkit.Unity.UX;
+using Innoactive.Hub.Interaction;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -19,8 +20,12 @@ namespace HoloToolkit.Unity.InputModule.Utilities.Interactions
     /// See Assets/HoloToolkit-Examples/Input/Readme/README_TwoHandManipulationTest.md
     /// for instructions on how to use the script.
     /// </summary>
-    public class TwoHandManipulatable : MonoBehaviour, IInputHandler, ISourceStateHandler
+    public class TwoHandManipulatable : MonoBehaviour, IInputHandler, ISourceStateHandler, IManipulationEvents
     {
+        
+        public event System.EventHandler<ManipulationEventArgs> ManipulationStarted;
+        public event System.EventHandler<ManipulationEventArgs> ManipulationEnded;
+        
         [SerializeField]
         [Tooltip("Transform that will be dragged. Defaults to the object of the component.")]
         private Transform HostTransform = null;
@@ -32,7 +37,7 @@ namespace HoloToolkit.Unity.InputModule.Utilities.Interactions
         /// <summary>
         /// enum describing range of affine xforms that are allowed.
         /// </summary>
-        private enum TwoHandedManipulation
+        public enum TwoHandedManipulation
         {
             Scale,
             Rotate,
@@ -129,10 +134,11 @@ namespace HoloToolkit.Unity.InputModule.Utilities.Interactions
             }
         }
 
+
         /// <summary>
         /// SetManipulationMode
         /// </summary>
-        private void SetManipulationMode(TwoHandedManipulation mode)
+        public void SetManipulationMode(TwoHandedManipulation mode)
         {
             ManipulationMode = mode;
         }
@@ -219,7 +225,7 @@ namespace HoloToolkit.Unity.InputModule.Utilities.Interactions
         /// <summary>
         /// OnSourceDetected Event Handler
         /// </summary>
-        public void OnSourceDetected(SourceStateEventData eventData){}
+        public void OnSourceDetected(SourceStateEventData eventData) { }
 
         /// <summary>
         /// OnSourceLost
@@ -428,6 +434,8 @@ namespace HoloToolkit.Unity.InputModule.Utilities.Interactions
 
             //Show Bounding Box visual on manipulation interaction
             ShowBoundingBox = true;
+
+            ManipulationStarted.Invoke(this, new ManipulationEventArgs());
         }
 
         private void OnManipulationEnded()
@@ -436,6 +444,8 @@ namespace HoloToolkit.Unity.InputModule.Utilities.Interactions
 
             //Hide Bounding Box visual on release
             ShowBoundingBox = false;
+
+            ManipulationEnded.Invoke(this, new ManipulationEventArgs());
         }
     }
 }

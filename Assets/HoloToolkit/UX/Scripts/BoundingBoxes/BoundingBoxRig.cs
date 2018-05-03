@@ -2,6 +2,8 @@
 // Licensed under the MIT License. See LICENSE in the project root for license information.
 
 using HoloToolkit.Unity.UX;
+using Innoactive.Hub.Interaction;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -10,8 +12,11 @@ namespace HoloToolkit.Unity.UX
     /// <summary>
     /// Constructs the scale and rotate gizmo handles for the Bounding Box 
     /// </summary>
-    public class BoundingBoxRig : MonoBehaviour
+    public class BoundingBoxRig : MonoBehaviour, IManipulationEvents
     {
+        public event System.EventHandler<ManipulationEventArgs> ManipulationStarted;
+        public event System.EventHandler<ManipulationEventArgs> ManipulationEnded;
+                
         [Header("Flattening")]
         [SerializeField]
         [Tooltip("Choose this option if Rig is to be applied to a 2D object.")]
@@ -76,6 +81,19 @@ namespace HoloToolkit.Unity.UX
 
         private bool destroying = false;
 
+        public AppBar AppBarPrefab
+        {
+            get
+            {
+                return appBarPrefab;
+            }
+
+            set
+            {
+                appBarPrefab = value;
+            }
+        }
+
         public BoundingBox BoundingBoxPrefab
         {
             get
@@ -128,6 +146,58 @@ namespace HoloToolkit.Unity.UX
             }
         }
 
+        public BoundingBoxGizmoHandleRotationType RotationType
+        {
+            get
+            {
+                return rotationType;
+            }
+
+            set
+            {
+                rotationType = value;
+            }
+        }
+
+        public BoundingBoxGizmoHandleHandMotionType HandMotionToRotate
+        {
+            get
+            {
+                return handMotionToRotate;
+            }
+
+            set
+            {
+                handMotionToRotate = value;
+            }
+        }
+
+        public float ScaleRate
+        {
+            get
+            {
+                return scaleRate;
+            }
+
+            set
+            {
+                scaleRate = value;
+            }
+        }
+
+        public float MaxScale
+        {
+            get
+            {
+                return maxScale;
+            }
+
+            set
+            {
+                maxScale = value;
+            }
+        }
+
         public void Activate()
         {
             ShowRig = true;
@@ -139,9 +209,10 @@ namespace HoloToolkit.Unity.UX
         }
 
         public void FocusOnHandle(GameObject handle)
-        {
+        {          
             if (handle != null)
             {
+                ManipulationStarted.Invoke(this,new ManipulationEventArgs());
                 for (int i = 0; i < rotateHandles.Length; ++i)
                 {
                     rotateHandles[i].SetActive(rotateHandles[i].gameObject == handle);
@@ -153,6 +224,8 @@ namespace HoloToolkit.Unity.UX
             }
             else
             {
+
+                ManipulationEnded.Invoke(this, new ManipulationEventArgs());
                 for (int i = 0; i < rotateHandles.Length; ++i)
                 {
                     rotateHandles[i].SetActive(true);
@@ -181,7 +254,7 @@ namespace HoloToolkit.Unity.UX
             boxInstance.IsVisible = false;
         }
 
-        private void Update()
+        private void LateUpdate()
         {
             if (destroying == false && ShowRig)
             {
@@ -230,8 +303,8 @@ namespace HoloToolkit.Unity.UX
                     cornerHandles[i].name = "Corner " + i.ToString();
                     rigScaleGizmoHandles[i] = cornerHandles[i].AddComponent<BoundingBoxGizmoHandle>();
                     rigScaleGizmoHandles[i].Rig = this;
-                    rigScaleGizmoHandles[i].ScaleRate = scaleRate;
-                    rigScaleGizmoHandles[i].MaxScale = maxScale;
+                    rigScaleGizmoHandles[i].ScaleRate = ScaleRate;
+                    rigScaleGizmoHandles[i].MaxScale = MaxScale;
                     rigScaleGizmoHandles[i].TransformToAffect = objectToBound.transform;
                     rigScaleGizmoHandles[i].Axis = BoundingBoxGizmoHandleAxisToAffect.Y;
                     rigScaleGizmoHandles[i].AffineType = BoundingBoxGizmoHandleTransformType.Scale;
@@ -264,8 +337,8 @@ namespace HoloToolkit.Unity.UX
                     rotateHandles[i].name = "Middle " + i.ToString();
                     rigRotateGizmoHandles[i] = rotateHandles[i].AddComponent<BoundingBoxGizmoHandle>();
                     rigRotateGizmoHandles[i].Rig = this;
-                    rigRotateGizmoHandles[i].HandMotionForRotation = handMotionToRotate;
-                    rigRotateGizmoHandles[i].RotationCoordinateSystem = rotationType;
+                    rigRotateGizmoHandles[i].HandMotionForRotation = HandMotionToRotate;
+                    rigRotateGizmoHandles[i].RotationCoordinateSystem = RotationType;
                     rigRotateGizmoHandles[i].TransformToAffect = objectToBound.transform;
                     rigRotateGizmoHandles[i].AffineType = BoundingBoxGizmoHandleTransformType.Rotation;
                    
@@ -474,8 +547,6 @@ namespace HoloToolkit.Unity.UX
             }
         }
 
-
-
         private List<Vector3> GetBounds()
         {
             if (objectToBound != null)
@@ -525,5 +596,6 @@ namespace HoloToolkit.Unity.UX
           
             return BoundingBox.FlattenModeEnum.DoNotFlatten;
         }
+
     }
 }

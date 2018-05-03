@@ -282,7 +282,7 @@ namespace HoloToolkit.Unity.UX
         /// <summary>
         /// private Update function provided by MonoBehaviour
         /// </summary>
-        protected virtual void Update()
+        protected virtual void LateUpdate()
         {
             CreateTransforms();
             RefreshTargetBounds();
