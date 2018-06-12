@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License. See LICENSE in the project root for license information.
 
 using HoloToolkit.Unity.Buttons;
@@ -420,6 +420,7 @@ namespace HoloToolkit.Unity.UX
                 defaultButtonsList.Add(GetDefaultButtonTemplateFromType(ButtonTypeEnum.Hide, numCustomButtons, UseHide, UseAdjust));
                 defaultButtonsList.Add(GetDefaultButtonTemplateFromType(ButtonTypeEnum.Show, numCustomButtons, UseHide, UseAdjust));
             }
+
             defaultButtons = defaultButtonsList.ToArray();
         }
 
@@ -482,7 +483,7 @@ namespace HoloToolkit.Unity.UX
                     return new ButtonTemplate(
                         ButtonTypeEnum.Hide,
                         "Hide",
-                        "ObjectCollectionScatter", // Replace with your custom icon texture name in HolographicButton prefab
+                        "KeyboardKeyGlyphs_Right", // Replace with your custom icon texture name in HolographicButton prefab
                         "Hide Menu",
                         0, // Always the first to appear
                         0);
@@ -511,7 +512,7 @@ namespace HoloToolkit.Unity.UX
                     return new ButtonTemplate(
                         ButtonTypeEnum.Show,
                         "Show",
-                        "ObjectCollectionScatter", // Replace with your custom icon texture name in HolographicButton prefab
+                        "KeyboardKeyGlyphs_Left", // Replace with your custom icon texture name in HolographicButton prefab
                         "Show Menu",
                         0,
                         0);
