@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License. See LICENSE in the project root for license information.
 
 using HoloToolkit.Unity.UX;
@@ -268,6 +268,7 @@ namespace HoloToolkit.Unity.UX
             destroying = true;
             ShowRig = false;
             ClearHandles();
+            Destroy(transformRig);
         }
 
         private void UpdateBoundsPoints()
@@ -299,6 +300,7 @@ namespace HoloToolkit.Unity.UX
                 {
                     cornerHandles[i] = GameObject.CreatePrimitive(PrimitiveType.Cube);
                     cornerHandles[i].GetComponent<Renderer>().material = scaleHandleMaterial;
+                    cornerHandles[i].GetComponent<BoxCollider>().isTrigger = true;
                     cornerHandles[i].transform.localScale = scaleHandleSize;
                     cornerHandles[i].name = "Corner " + i.ToString();
                     rigScaleGizmoHandles[i] = cornerHandles[i].AddComponent<BoundingBoxGizmoHandle>();
@@ -333,6 +335,7 @@ namespace HoloToolkit.Unity.UX
                 {
                     rotateHandles[i] = GameObject.CreatePrimitive(PrimitiveType.Sphere);
                     rotateHandles[i].GetComponent<Renderer>().material = rotateHandleMaterial;
+                    rotateHandles[i].GetComponent<SphereCollider>().isTrigger = true;
                     rotateHandles[i].transform.localScale = rotateHandleSize;
                     rotateHandles[i].name = "Middle " + i.ToString();
                     rigRotateGizmoHandles[i] = rotateHandles[i].AddComponent<BoundingBoxGizmoHandle>();
@@ -596,6 +599,5 @@ namespace HoloToolkit.Unity.UX
           
             return BoundingBox.FlattenModeEnum.DoNotFlatten;
         }
-
     }
 }

@@ -6,6 +6,7 @@ using HoloToolkit.Unity.InputModule;
 using HoloToolkit.Unity.Receivers;
 using System;
 using System.Collections.Generic;
+using Innoactive.Hub.Unity;
 using UnityEngine;
 using UnityEngine.Events;
 
@@ -206,6 +207,11 @@ namespace HoloToolkit.Unity.UX
                     CreateButton(buttons[i], CustomButtonIconProfile);
                 }
             }
+
+            if (boundingBox.Target.GetComponent<NotifyOnDestroy>() != null)
+            {
+                boundingBox.Target.GetComponent<NotifyOnDestroy>().OnDestroyed += NotifyOnDestroy_OnDestroyed;
+            }
         }
 
         protected override void InputClicked(GameObject obj, InputClickedEventData eventData)
@@ -221,11 +227,7 @@ namespace HoloToolkit.Unity.UX
             switch (obj.name)
             {
                 case "Remove":
-                    // Destroy the target object, Bounding Box, Bounding Box Rig and App Bar
-                    boundingBox.Target.GetComponent<BoundingBoxRig>().Deactivate();
-                    Destroy(boundingBox.Target.GetComponent<BoundingBoxRig>());
-                    Destroy(boundingBox.Target);
-                    Destroy(gameObject);
+                    Remove();
                     break;
 
                 case "Adjust":
@@ -465,7 +467,7 @@ namespace HoloToolkit.Unity.UX
                     return new ButtonTemplate(
                         ButtonTypeEnum.Adjust,
                         "Adjust",
-                        "ObjectCollectionScatter", // Replace with your custom icon texture name in HolographicButton prefab
+                        "Adjust", // Replace with your custom icon texture name in HolographicButton prefab
                         "Adjust",
                         adjustPosition, // Always next-to-last to appear
                         0);
@@ -474,7 +476,7 @@ namespace HoloToolkit.Unity.UX
                     return new ButtonTemplate(
                         ButtonTypeEnum.Done,
                         "Done",
-                        "ObjectCollectionScatter", // Replace with your custom icon texture name in HolographicButton prefab
+                        "Done", // Replace with your custom icon texture name in HolographicButton prefab
                         "Done",
                         0,
                         0);
@@ -503,7 +505,7 @@ namespace HoloToolkit.Unity.UX
                     return new ButtonTemplate(
                         ButtonTypeEnum.Remove,
                         "Remove",
-                        "ObjectCollectionScatter", // Replace with your custom icon texture name in HolographicButton prefab
+                        "Remove", // Replace with your custom icon texture name in HolographicButton prefab
                         "Remove",
                         removePosition, // Always the last to appear
                         1);
@@ -520,6 +522,20 @@ namespace HoloToolkit.Unity.UX
                 default:
                     throw new ArgumentOutOfRangeException("type", type, null);
             }
+        }
+
+        private void NotifyOnDestroy_OnDestroyed(NotifyOnDestroy source)
+        {
+            source.OnDestroyed -= NotifyOnDestroy_OnDestroyed;
+            Remove();
+        }
+
+        private void Remove()
+        {
+            Destroy(boundingBox.Target.GetComponent<BoundingBoxRig>());
+            Destroy(boundingBox.Target);
+            Destroy(boundingBox.gameObject);
+            Destroy(gameObject);
         }
     }
 }
