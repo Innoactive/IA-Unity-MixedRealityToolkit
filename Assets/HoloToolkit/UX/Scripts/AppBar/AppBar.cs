@@ -176,7 +176,7 @@ namespace HoloToolkit.Unity.UX
         private BoundingBox boundingBox;
 
         private ButtonTemplate[] defaultButtons;
-        private Vector3[] forwards = new Vector3[4];
+        private Vector3[] forwards = new Vector3[6];
         private Vector3 targetBarSize = Vector3.one;
         private float lastTimeTapped = 0f;
         private float coolDownTime = 0.5f;
@@ -194,6 +194,14 @@ namespace HoloToolkit.Unity.UX
         public void Start()
         {
             State = AppBarStateEnum.Default;
+
+            if (boundingBox.Target.GetComponent<NotifyOnDestroy>() != null)
+            {
+                boundingBox.Target.GetComponent<NotifyOnDestroy>().OnDestroyed += NotifyOnDestroy_OnDestroyed;
+            }
+
+            ApplyButtonInteraction();
+
             if (interactables.Count == 0)
             {
                 RefreshTemplates();
@@ -207,11 +215,24 @@ namespace HoloToolkit.Unity.UX
                     CreateButton(buttons[i], CustomButtonIconProfile);
                 }
             }
+        }
 
-            if (boundingBox.Target.GetComponent<NotifyOnDestroy>() != null)
+        private void ApplyButtonInteraction()
+        {
+            ButtonTemplate[] newButtons = new AppBar.ButtonTemplate[buttons.Length];
+
+            for (int i = 0; i < buttons.Length; i++)
             {
-                boundingBox.Target.GetComponent<NotifyOnDestroy>().OnDestroyed += NotifyOnDestroy_OnDestroyed;
+                ButtonTemplate newButton = buttons[i];
+                InteractionReceiver receiver = GameObject.Instantiate(newButton.EventTarget) as InteractionReceiver;
+                receiver.Targets.Add(boundingBox.Target);
+                receiver.OnDisable();
+                receiver.OnEnable();
+                newButton.EventTarget = receiver;
+                newButtons[i] = newButton;
             }
+
+            buttons = newButtons;
         }
 
         protected override void InputClicked(GameObject obj, InputClickedEventData eventData)
@@ -330,8 +351,10 @@ namespace HoloToolkit.Unity.UX
             forwards[1] = boundingBox.transform.right;
             forwards[2] = -boundingBox.transform.forward;
             forwards[3] = -boundingBox.transform.right;
+            forwards[4] = boundingBox.transform.up;
+            forwards[5] = -boundingBox.transform.up;
             Vector3 scale = boundingBox.TargetBoundsLocalScale;
-            float maxXYScale = Mathf.Max(scale.x, scale.y);
+            float maxXYScale = Mathf.Max(scale.x, scale.y) / 2f;
             float closestSoFar = Mathf.Infinity;
             Vector3 finalPosition = Vector3.zero;
             Vector3 finalForward = Vector3.zero;
@@ -339,6 +362,18 @@ namespace HoloToolkit.Unity.UX
 
             for (int i = 0; i < forwards.Length; i++)
             {
+                maxXYScale = scale.x;
+                if (i == 0 || i == 2)
+                {
+                    maxXYScale = scale.z;
+                }
+                else if (i == 4 || i == 5)
+                {
+                    maxXYScale = scale.y;
+                }
+
+                maxXYScale = maxXYScale / 2f + 0.1f;
+
                 Vector3 nextPosition = boundingBox.transform.position +
                 (forwards[i] * -maxXYScale) +
                 (Vector3.up * (-scale.y * HoverOffsetYScale));
