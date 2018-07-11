@@ -354,7 +354,7 @@ namespace HoloToolkit.Unity.UX
             forwards[4] = boundingBox.transform.up;
             forwards[5] = -boundingBox.transform.up;
             Vector3 scale = boundingBox.TargetBoundsLocalScale;
-            float maxXYScale = Mathf.Max(scale.x, scale.y) / 2f;
+            float maxXYScale = Mathf.Max(scale.x, scale.y);// / 2f;
             float closestSoFar = Mathf.Infinity;
             Vector3 finalPosition = Vector3.zero;
             Vector3 finalForward = Vector3.zero;
@@ -362,21 +362,20 @@ namespace HoloToolkit.Unity.UX
 
             for (int i = 0; i < forwards.Length; i++)
             {
-                maxXYScale = scale.x;
-                if (i == 0 || i == 2)
-                {
-                    maxXYScale = scale.z;
-                }
-                else if (i == 4 || i == 5)
-                {
-                    maxXYScale = scale.y;
-                }
+                //maxXYScale = scale.x;
+                //if (i == 0 || i == 2)
+                //{
+                //    maxXYScale = scale.z;
+                //}
+                //else if (i == 4 || i == 5)
+                //{
+                //    maxXYScale = scale.y;
+                //}
 
-                maxXYScale = maxXYScale / 2f + 0.1f;
+                //maxXYScale = maxXYScale / 2f + 0.1f;
 
                 Vector3 nextPosition = boundingBox.transform.position +
-                (forwards[i] * -maxXYScale) +
-                (Vector3.up * (-scale.y * HoverOffsetYScale));
+                                       (forwards[i] * -maxXYScale); //+ (Vector3.up * (-scale.y * HoverOffsetYScale));
 
                 float distance = Vector3.Distance(nextPosition, headPosition);
                 if (distance < closestSoFar)
@@ -402,9 +401,274 @@ namespace HoloToolkit.Unity.UX
             transform.eulerAngles = eulerAngles;
         }
 
+        private GameObject[] fakeSpheres;
+
+        private GameObject[] edgeSpheres;
+
+        private GameObject center;
+
+        private Transform sideCenterTransform;
+
+        private void FollowBoundingBox()
+        {
+            if (sideCenterTransform == null)
+            {
+                sideCenterTransform = new GameObject("SideCenter").transform;
+            }
+
+
+            if (fakeSpheres == null)
+            {
+                center = new GameObject();
+                fakeSpheres = new GameObject[6];
+                edgeSpheres = new GameObject[4];
+
+                for (int i = 0; i < fakeSpheres.Length; i++)
+                {
+                    GameObject go = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+                    go.transform.localScale = Vector3.one * 0.1f;
+                    go.transform.SetParent(center.transform);
+                    DestroyImmediate(go.GetComponent<Collider>());
+                    fakeSpheres[i] = go;
+                }
+
+                for (int i = 0; i < edgeSpheres.Length; i++)
+                {
+                    GameObject go = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+                    go.transform.localScale = Vector3.one * 0.01f;
+                    go.transform.SetParent(center.transform);
+                    DestroyImmediate(go.GetComponent<Collider>());
+                    edgeSpheres[i] = go;
+                }
+            }
+
+            if (boundingBox == null)
+            {
+                if (DisplayType == AppBarDisplayTypeEnum.Manipulation)
+                {
+                    // Hide our buttons
+                    baseRenderer.SetActive(false);
+                }
+                else
+                {
+                    baseRenderer.SetActive(true);
+                }
+                return;
+            }
+
+            // Show our buttons
+            baseRenderer.SetActive(true);
+
+            forwards[0] = boundingBox.transform.forward;
+            forwards[1] = boundingBox.transform.right;
+            forwards[2] = -boundingBox.transform.forward;
+            forwards[3] = -boundingBox.transform.right;
+            forwards[4] = boundingBox.transform.up;
+            forwards[5] = -boundingBox.transform.up;
+            Vector3 scale = boundingBox.TargetBoundsLocalScale;
+            Vector3 headPosition = Camera.main.transform.position;
+            float closestSoFar = Mathf.Infinity;
+
+            Vector3 boundsCenter = boundingBox.targetBoundsWorldCenter;
+
+            center.transform.position = boundsCenter;
+            int j = 0;
+            GameObject closest = null;
+            Vector3 clos = Vector3.zero;
+            Vector3 forwardVector = Vector3.zero;
+            Vector3 upVector;
+            Vector3 downVector;
+            Vector3 sideCenterPosition = Vector3.zero;
+            foreach (Vector3 forward in forwards)
+            {
+                sideCenterPosition.x = scale.x * 0.5f * forward.x;
+                sideCenterPosition.y = scale.y * 0.5f * forward.y;
+                sideCenterPosition.z = scale.z * 0.5f * forward.z;
+
+                sideCenterPosition += boundsCenter;
+
+                fakeSpheres[j].transform.position = sideCenterPosition;
+                fakeSpheres[j].transform.forward = forward;
+
+
+
+                float distance = Vector3.Distance(sideCenterPosition, headPosition);
+                if (distance < closestSoFar)
+                {
+                    closestSoFar = distance;
+                    forwardVector = forward;
+
+                    sideCenterTransform.position = sideCenterPosition;
+                    sideCenterTransform.forward = forward;
+
+                    //finalPosition = nextPosition;
+                    //finalForward = forwards[i];
+
+                    clos = sideCenterPosition;
+                    closest = fakeSpheres[j];
+                }
+
+                j++;
+            }
+
+            Vector3[] edgeForward = new Vector3[4];
+            edgeForward[0] = sideCenterTransform.up;
+            edgeForward[1] = -sideCenterTransform.up;
+            edgeForward[2] = sideCenterTransform.right;
+            edgeForward[3] = -sideCenterTransform.right;
+
+            int k = 0;
+            Vector3 edgeCenterPosition = Vector3.zero;
+            foreach (Vector3 forward in edgeForward)
+            {
+                edgeCenterPosition.x = scale.x * 0.5f * forward.x;
+                edgeCenterPosition.y = scale.y * 0.5f * forward.y;
+                edgeCenterPosition.z = scale.z * 0.5f * forward.z;
+
+                edgeCenterPosition += sideCenterTransform.position;
+
+                edgeSpheres[k].transform.position = edgeCenterPosition;
+                k++;
+            }
+
+            foreach (GameObject f in fakeSpheres)
+            {
+                f.GetComponent<Renderer>().material.color = Color.white;
+            }
+
+            closest.GetComponent<Renderer>().material.color = Color.red;
+
+            Debug.Log("Closest: " + clos);
+        }
+
+        private void FollowBoundingBox2()
+        {
+            if (center == null)
+            {
+                center = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+                center.transform.localScale = Vector3.one * 0.1f;
+                DestroyImmediate(center.GetComponent<Collider>());
+            }
+
+            Vector3[] facePositions = new Vector3[6];
+            Vector3[] cornerPositions = new Vector3[20];
+            boundingBox.LocalTargetBounds.GetFacePositions(boundingBox.Target.transform, ref facePositions);
+            boundingBox.LocalTargetBounds.GetCornerAndMidPointPositions(boundingBox.Target.transform, ref cornerPositions);
+
+            //if (fakeSpheres == null)
+            //{
+            //    center = new GameObject();
+            //    fakeSpheres = new GameObject[20];
+
+            //    for (int i = 0; i < fakeSpheres.Length; i++)
+            //    {
+            //        GameObject go = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+            //        go.transform.localScale = Vector3.one * 0.1f;
+            //        go.transform.SetParent(center.transform);
+            //        DestroyImmediate(go.GetComponent<Collider>());
+            //        fakeSpheres[i] = go;
+            //    }
+            //}
+            
+            Vector3 headPosition = Camera.main.transform.position;
+            float closestSoFar = Mathf.Infinity;
+            float distance = 0;
+            Vector3 closestFace = Vector3.zero;
+            int faceIndex = -1;
+
+            for (int j = 0; j < facePositions.Length; j++)
+            {
+                Vector3 facePos = facePositions[j];
+
+                distance = Vector3.Distance(facePos, headPosition);
+                if (distance < closestSoFar)
+                {
+                    closestSoFar = distance;
+                    closestFace = facePos;
+                    faceIndex = j;
+                }
+            }
+
+            Vector3[] edges = new Vector3[4];
+
+            if (faceIndex == BoundsExtensions.TOP)
+            {
+                edges[0] = cornerPositions[BoundsExtensions.LTF_RTF];
+                edges[1] = cornerPositions[BoundsExtensions.RTF_RTB];
+                edges[2] = cornerPositions[BoundsExtensions.RTB_LTB];
+                edges[3] = cornerPositions[BoundsExtensions.LTF_LTB];
+            }
+            else if (faceIndex == BoundsExtensions.BOT)
+            {
+                edges[0] = cornerPositions[BoundsExtensions.LBF_RBF];
+                edges[1] = cornerPositions[BoundsExtensions.RBF_RBB];
+                edges[2] = cornerPositions[BoundsExtensions.RBB_LBB];
+                edges[3] = cornerPositions[BoundsExtensions.LBF_LBB];
+            }
+            else if (faceIndex == BoundsExtensions.LFT)
+            {
+                edges[0] = cornerPositions[BoundsExtensions.LBF_LBB];
+                edges[1] = cornerPositions[BoundsExtensions.LTB_LBB];
+                edges[2] = cornerPositions[BoundsExtensions.LTF_LTB];
+                edges[3] = cornerPositions[BoundsExtensions.LTF_LBF];
+            }
+            else if (faceIndex == BoundsExtensions.RHT)
+            {
+                edges[0] = cornerPositions[BoundsExtensions.RBF_RBB];
+                edges[1] = cornerPositions[BoundsExtensions.RTB_RBB];
+                edges[2] = cornerPositions[BoundsExtensions.RTF_RTB];
+                edges[3] = cornerPositions[BoundsExtensions.RTF_RBF];
+            }
+            else if (faceIndex == BoundsExtensions.FWD)
+            {
+                edges[0] = cornerPositions[BoundsExtensions.RTB_RBB];
+                edges[1] = cornerPositions[BoundsExtensions.RTB_LTB];
+                edges[2] = cornerPositions[BoundsExtensions.LTB_LBB];
+                edges[3] = cornerPositions[BoundsExtensions.RBB_LBB];
+            }
+            else if (faceIndex == BoundsExtensions.BCK)
+            {
+                edges[0] = cornerPositions[BoundsExtensions.LBF_RBF];
+                edges[1] = cornerPositions[BoundsExtensions.RTF_RBF];
+                edges[2] = cornerPositions[BoundsExtensions.LTF_RTF];
+                edges[3] = cornerPositions[BoundsExtensions.LTF_LBF];
+            }
+
+
+
+
+            closestSoFar = Mathf.Infinity;
+            Vector3 closestEdge = Vector3.zero;
+            int edgeIndex = -1;
+            for (int i = 0; i < edges.Length; i++)
+            {
+                Vector3 edgePos = edges[i];
+                //fakeSpheres[j].transform.position = cornerPos;
+
+                if (edgePos.y < closestSoFar)
+                {
+                    closestSoFar = edgePos.y;
+                    closestEdge = edgePos;
+                    edgeIndex = i;
+                }
+            }
+
+
+            Debug.Log("FaceIndex: " + faceIndex + " EdgeIndex: " + edgeIndex);
+
+            center.transform.position = closestFace;
+            Vector3 forward = closestFace - closestEdge;
+            forward.z = 0;
+            //transform.up = forward.normalized;
+            transform.position = closestEdge;
+
+        }
+
         private void Update()
         {
-            FollowBoundingBox(true);
+            //FollowBoundingBox(true);
+
+            FollowBoundingBox2();
 
             switch (State)
             {

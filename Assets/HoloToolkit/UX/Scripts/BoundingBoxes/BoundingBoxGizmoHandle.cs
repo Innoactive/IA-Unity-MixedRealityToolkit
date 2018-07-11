@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License. See LICENSE in the project root for license information.
 
 using HoloToolkit.Unity.InputModule;
@@ -153,6 +153,7 @@ namespace HoloToolkit.Unity.UX
 #endif
             cachedRenderer = gameObject.GetComponent<Renderer>();
         }
+
         private void Update()
         {
             if (inputDownEventData != null)
@@ -198,6 +199,7 @@ namespace HoloToolkit.Unity.UX
             inputDownEventData.InputSource.TryGetGripRotation(sourceId, out handOrientation);
             return handOrientation;
         }
+
         private void ApplyScale(Vector3 currentHandPosition)
         {
             if ((transformToAffect.position - initialHandPosition).magnitude > minimumScaleNav)
@@ -209,7 +211,7 @@ namespace HoloToolkit.Unity.UX
 
                 Vector3 newScale = changeScale;
                 newScale.Scale(initialScale);
-               
+
                 //scale from object center
                 transformToAffect.localScale = newScale;
 
@@ -222,6 +224,7 @@ namespace HoloToolkit.Unity.UX
                 transformToAffect.position = initialPosition - postScaleOffset;
             }
         }
+
         private void ApplyRotation(Quaternion currentHandOrientation)
         {
 #if UNITY_2017_1_OR_NEWER
@@ -257,12 +260,13 @@ namespace HoloToolkit.Unity.UX
             }
             else
             {
-                Vector3 axis = (Axis == BoundingBoxGizmoHandleAxisToAffect.X ? new Vector3(1,0,0) : Axis == BoundingBoxGizmoHandleAxisToAffect.Y ? new Vector3(0,1,0) : new Vector3(0,0,1) );
+                Vector3 axis = (Axis == BoundingBoxGizmoHandleAxisToAffect.X ? new Vector3(1, 0, 0) : Axis == BoundingBoxGizmoHandleAxisToAffect.Y ? new Vector3(0, 1, 0) : new Vector3(0, 0, 1));
                 transformToAffect.localRotation = initialRotation;
                 transformToAffect.Rotate(axis, angle * 5.0f);
             }
 #endif // UNITY_2017_1_OR_NEWER
         }
+
         private void ApplyRotation(Vector3 currentHandPosition)
         {
             Vector3 initialRay = initialHandPosition - transformToAffect.position;
@@ -299,17 +303,19 @@ namespace HoloToolkit.Unity.UX
             }
             else
             {
-                Vector3 axis = (Axis == BoundingBoxGizmoHandleAxisToAffect.X ? new Vector3(1, 0, 0) : Axis == BoundingBoxGizmoHandleAxisToAffect.Y ? new Vector3(0, 1, 0) : new Vector3(0, 0,1));
+                Vector3 axis = (Axis == BoundingBoxGizmoHandleAxisToAffect.X ? new Vector3(1, 0, 0) : Axis == BoundingBoxGizmoHandleAxisToAffect.Y ? new Vector3(0, 1, 0) : new Vector3(0, 0, 1));
                 transformToAffect.localRotation = initialRotation;
                 float angle = newEulers.x != 0 ? newEulers.x : newEulers.y != 0 ? newEulers.y : newEulers.z;
                 transformToAffect.Rotate(axis, angle * 2.0f);
             }
         }
+
         private Vector3 GetBoundedScaleChange(Vector3 scale)
         {
             Vector3 maximumScale = new Vector3(initialScale.x * maxScale, initialScale.y * maxScale, initialScale.z * maxScale);
             Vector3 intendedFinalScale = new Vector3(initialScale.x, initialScale.y, initialScale.z);
             intendedFinalScale.Scale(scale);
+
             if (intendedFinalScale.x > maximumScale.x || intendedFinalScale.y > maximumScale.y || intendedFinalScale.z > maximumScale.z)
             {
                 return new Vector3(maximumScale.x / initialScale.x, maximumScale.y / initialScale.y, maximumScale.z / initialScale.z);
@@ -341,13 +347,13 @@ namespace HoloToolkit.Unity.UX
         {
             inputDownEventData = eventData;
 
-            initialHandPosition     = GetHandPosition(eventData.SourceId);
-            initialScale            = transformToAffect.localScale;
-            initialPosition         = transformToAffect.position;
-            initialOrientation      = transformToAffect.rotation.eulerAngles;
-            initialRotation         = transformToAffect.rotation;
-            initialHandOrientation  = GetHandOrientation(eventData.SourceId);
-            initialScaleOrigin      = transformToAffect.position - this.transform.position;
+            initialHandPosition = GetHandPosition(eventData.SourceId);
+            initialScale = transformToAffect.localScale;
+            initialPosition = transformToAffect.position;
+            initialOrientation = transformToAffect.rotation.eulerAngles;
+            initialRotation = transformToAffect.rotation;
+            initialHandOrientation = GetHandOrientation(eventData.SourceId);
+            initialScaleOrigin = transformToAffect.position - this.transform.position;
 
             HoloToolkit.Unity.InputModule.InputManager.Instance.PushModalInputHandler(gameObject);
 
@@ -355,6 +361,7 @@ namespace HoloToolkit.Unity.UX
             Rig.FocusOnHandle(this.gameObject);
             eventData.Use();
         }
+
         public void OnInputUp(InputEventData eventData)
         {
             inputDownEventData = null;

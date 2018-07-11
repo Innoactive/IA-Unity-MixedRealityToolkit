@@ -198,6 +198,11 @@ namespace HoloToolkit.Unity.UX
             }
         }
 
+        public List<Vector3> HandleCentroids
+        {
+            get { return handleCentroids; }
+        }
+
         public void Activate()
         {
             ShowRig = true;
@@ -236,7 +241,6 @@ namespace HoloToolkit.Unity.UX
                 }
             }
         }
-
 
         private void Start()
         {
@@ -550,7 +554,7 @@ namespace HoloToolkit.Unity.UX
             }
         }
 
-        private List<Vector3> GetBounds()
+        public List<Vector3> GetBounds()
         {
             if (objectToBound != null)
             {

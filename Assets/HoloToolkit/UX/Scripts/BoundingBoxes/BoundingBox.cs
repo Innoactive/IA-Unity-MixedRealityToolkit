@@ -1,4 +1,4 @@
-﻿//
+//
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License. See LICENSE in the project root for license information.
 //
@@ -111,7 +111,7 @@ namespace HoloToolkit.Unity.UX
         [SerializeField]
         protected LayerMask ignoreLayers = (1 << 2); // Ignore Raycast Layer
 
-        protected Vector3 targetBoundsWorldCenter = Vector3.zero;
+        public Vector3 targetBoundsWorldCenter = Vector3.zero;
 
         protected Vector3 targetBoundsLocalScale = Vector3.zero;
 
@@ -124,6 +124,11 @@ namespace HoloToolkit.Unity.UX
         protected bool isVisible = true;
 
         protected Renderer rendererForVisibility;
+
+        public List<Vector3> BoundsPoints
+        {
+            get { return boundsPoints; }
+        }
 
         /// <summary>
         /// Event Handler- called when the FlattenedAxis property is changed.
@@ -231,6 +236,11 @@ namespace HoloToolkit.Unity.UX
             }
         }
 
+        public Bounds LocalTargetBounds
+        {
+            get { return localTargetBounds; }
+        }
+
         /// <summary>
         /// The current flattened axis, if any
         /// </summary>
@@ -252,6 +262,8 @@ namespace HoloToolkit.Unity.UX
                 }
             }
         }
+
+        //public ManipulatableCollisionDetector CollisionDetector { get; set; }
 
         #region
         /// <summary>
@@ -477,6 +489,7 @@ namespace HoloToolkit.Unity.UX
                     scale.z += (largestDimension * flattenedScalePadding);
                     break;
             }
+
             scaleTransform.localScale = scale;
             Vector3 rotation = target.transform.eulerAngles;
             transform.eulerAngles = rotation;

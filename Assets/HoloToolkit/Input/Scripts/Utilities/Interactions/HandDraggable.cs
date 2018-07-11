@@ -3,6 +3,7 @@
 
 using UnityEngine;
 using System;
+using Innoactive.Hub.Hololens;
 
 namespace HoloToolkit.Unity.InputModule
 {
@@ -63,8 +64,11 @@ namespace HoloToolkit.Unity.InputModule
 
         private IInputSource currentInputSource;
         private uint currentInputSourceId;
+
+        private NetworkedPhysicsController networkedPhysics;
         private Rigidbody hostRigidbody;
         private bool hostRigidbodyWasKinematic;
+        private bool hostRigidbodyWasGravityOn;
 
         private void Start()
         {
@@ -74,6 +78,7 @@ namespace HoloToolkit.Unity.InputModule
             }
 
             hostRigidbody = HostTransform.GetComponent<Rigidbody>();
+            networkedPhysics = HostTransform.GetComponent<NetworkedPhysicsController>();
         }
 
         private void OnDestroy()
@@ -122,7 +127,15 @@ namespace HoloToolkit.Unity.InputModule
             if (hostRigidbody != null)
             {
                 hostRigidbodyWasKinematic = hostRigidbody.isKinematic;
+                hostRigidbodyWasGravityOn = hostRigidbody.useGravity;
                 hostRigidbody.isKinematic = true;
+                hostRigidbody.useGravity = false;
+
+                if (networkedPhysics != null)
+                {
+                    networkedPhysics.SetGameObjectGravity(hostRigidbody.gameObject, hostRigidbody.useGravity);
+                    networkedPhysics.SetGameObjectKinematics(hostRigidbody.gameObject, hostRigidbody.isKinematic);
+                }
             }
 
             Transform cameraTransform = CameraCache.Main.transform;
@@ -299,10 +312,19 @@ namespace HoloToolkit.Unity.InputModule
             isDragging = false;
             currentInputSource = null;
             currentInputSourceId = 0;
+
             if (hostRigidbody != null)
             {
                 hostRigidbody.isKinematic = hostRigidbodyWasKinematic;
+                hostRigidbody.useGravity = hostRigidbodyWasGravityOn;
+
+                if (networkedPhysics != null)
+                {
+                    networkedPhysics.SetGameObjectGravity(hostRigidbody.gameObject, hostRigidbody.useGravity);
+                    networkedPhysics.SetGameObjectKinematics(hostRigidbody.gameObject, hostRigidbody.isKinematic);
+                }
             }
+
             StoppedDragging.RaiseEvent();
         }
 

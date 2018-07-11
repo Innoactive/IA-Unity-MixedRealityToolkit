@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License. See LICENSE in the project root for license information.
 
 using System.Collections.Generic;
@@ -170,8 +170,10 @@ namespace HoloToolkit.Unity.SpatialMapping
 
         private void AttachWorldAnchor()
         {
+            Debug.Log("AttachWorldAnchor");
             if (WorldAnchorManager.Instance != null)
             {
+                Debug.Log("Actually Attach");
                 // Add world anchor when object placement is done.
                 WorldAnchorManager.Instance.AttachAnchor(PlaceParentOnTap ? ParentGameObjectToPlace : gameObject);
             }

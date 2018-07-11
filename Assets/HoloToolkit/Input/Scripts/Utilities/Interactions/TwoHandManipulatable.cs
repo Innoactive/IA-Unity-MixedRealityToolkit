@@ -7,6 +7,7 @@ using Innoactive.Hub.Interaction;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Innoactive.Hub.Hololens;
 using UnityEngine;
 using UnityEngine.Assertions;
 
@@ -33,6 +34,11 @@ namespace HoloToolkit.Unity.InputModule.Utilities.Interactions
         [SerializeField]
         [Tooltip("To visualize the object bounding box, drop the HoloToolKit/UX/Prefabs/BoundingBoxes/BoundingBoxBasic.prefab here. This is optional.")]
         private BoundingBox boundingBoxPrefab = null;
+
+        private NetworkedPhysicsController networkedPhysics;
+        private Rigidbody hostRigidbody;
+        private bool hostRigidbodyWasKinematic;
+        private bool hostRigidbodyWasGravityOn;
 
         /// <summary>
         /// enum describing range of affine xforms that are allowed.
@@ -86,10 +92,12 @@ namespace HoloToolkit.Unity.InputModule.Utilities.Interactions
             MovingRotatingScaling = 0x111
         };
 
+        private float floorHeight;
+
         /// <summary>
         /// private properties that store transform information.
         /// </summary>
-        private BoundingBox boundingBoxInstance;
+        public BoundingBox BoundingBoxInstance;
         private State currentState;
         private TwoHandMoveLogic m_moveLogic;
         private TwoHandScaleLogic m_scaleLogic;
@@ -114,21 +122,21 @@ namespace HoloToolkit.Unity.InputModule.Utilities.Interactions
             {
                 if (boundingBoxPrefab != null)
                 {
-                    if (boundingBoxInstance == null)
+                    if (BoundingBoxInstance == null)
                     {
                         // Instantiate Bounding Box from the Prefab
-                        boundingBoxInstance = Instantiate(boundingBoxPrefab) as BoundingBox;
+                        BoundingBoxInstance = Instantiate(boundingBoxPrefab) as BoundingBox;
                     }
 
                     if (value)
                     {
-                        boundingBoxInstance.Target = this.gameObject;
-                        boundingBoxInstance.gameObject.SetActive(true);
+                        BoundingBoxInstance.Target = this.gameObject;
+                        BoundingBoxInstance.gameObject.SetActive(true);
                     }
                     else
                     {
-                        boundingBoxInstance.Target = null;
-                        boundingBoxInstance.gameObject.SetActive(false);
+                        BoundingBoxInstance.Target = null;
+                        BoundingBoxInstance.gameObject.SetActive(false);
                     }
                 }
             }
@@ -159,6 +167,11 @@ namespace HoloToolkit.Unity.InputModule.Utilities.Interactions
             {
                 HostTransform = transform;
             }
+
+            hostRigidbody = HostTransform.GetComponent<Rigidbody>();
+            networkedPhysics = HostTransform.GetComponent<NetworkedPhysicsController>();
+
+            floorHeight = GameObject.Find("Floor").transform.position.y;
         }
 
         private void Update()
@@ -177,6 +190,16 @@ namespace HoloToolkit.Unity.InputModule.Utilities.Interactions
             if (currentState != State.Start)
             {
                 UpdateStateMachine();
+            }
+        }
+
+        private GameObject[] objs;
+
+        private void LateUpdate()
+        {
+            if (BoundingBoxInstance != null && (hostRigidbody == null || hostRigidbody.useGravity == false))
+            {
+                ManipulatableCollisionDetector.CorrectPosition(HostTransform.gameObject, BoundingBoxInstance, floorHeight);
             }
         }
 
@@ -380,6 +403,7 @@ namespace HoloToolkit.Unity.InputModule.Utilities.Interactions
             HostTransform.position = targetPosition;
             HostTransform.rotation = targetRotation;
             HostTransform.localScale = targetScale;
+
 #endif // UNITY_2017_2_OR_NEWER
         }
 
@@ -435,6 +459,20 @@ namespace HoloToolkit.Unity.InputModule.Utilities.Interactions
             //Show Bounding Box visual on manipulation interaction
             ShowBoundingBox = true;
 
+            if (hostRigidbody != null)
+            {
+                hostRigidbodyWasKinematic = hostRigidbody.isKinematic;
+                hostRigidbodyWasGravityOn = hostRigidbody.useGravity;
+                hostRigidbody.isKinematic = true;
+                hostRigidbody.useGravity = false;
+
+                if (networkedPhysics != null)
+                {
+                    networkedPhysics.SetGameObjectGravity(hostRigidbody.gameObject, hostRigidbody.useGravity);
+                    networkedPhysics.SetGameObjectKinematics(hostRigidbody.gameObject, hostRigidbody.isKinematic);
+                }
+            }
+
             ManipulationStarted.Invoke(this, new ManipulationEventArgs());
         }
 
@@ -444,6 +482,18 @@ namespace HoloToolkit.Unity.InputModule.Utilities.Interactions
 
             //Hide Bounding Box visual on release
             ShowBoundingBox = false;
+
+            if (hostRigidbody != null)
+            {
+                hostRigidbody.isKinematic = hostRigidbodyWasKinematic;
+                hostRigidbody.useGravity = hostRigidbodyWasGravityOn;
+
+                if (networkedPhysics != null)
+                {
+                    networkedPhysics.SetGameObjectGravity(hostRigidbody.gameObject, hostRigidbody.useGravity);
+                    networkedPhysics.SetGameObjectKinematics(hostRigidbody.gameObject, hostRigidbody.isKinematic);
+                }
+            }
 
             ManipulationEnded.Invoke(this, new ManipulationEventArgs());
         }
