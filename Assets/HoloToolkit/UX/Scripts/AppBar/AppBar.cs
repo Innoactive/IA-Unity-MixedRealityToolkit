@@ -543,12 +543,12 @@ namespace HoloToolkit.Unity.UX
 
         private void FollowBoundingBox2()
         {
-            if (center == null)
-            {
-                center = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-                center.transform.localScale = Vector3.one * 0.1f;
-                DestroyImmediate(center.GetComponent<Collider>());
-            }
+            //if (center == null)
+            //{
+            //    center = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+            //    center.transform.localScale = Vector3.one * 0.1f;
+            //    DestroyImmediate(center.GetComponent<Collider>());
+            //}
 
             Vector3[] facePositions = new Vector3[6];
             Vector3[] cornerPositions = new Vector3[20];
@@ -637,6 +637,8 @@ namespace HoloToolkit.Unity.UX
 
 
 
+
+
             closestSoFar = Mathf.Infinity;
             Vector3 closestEdge = Vector3.zero;
             int edgeIndex = -1;
@@ -653,15 +655,13 @@ namespace HoloToolkit.Unity.UX
                 }
             }
 
-
-            Debug.Log("FaceIndex: " + faceIndex + " EdgeIndex: " + edgeIndex);
-
-            center.transform.position = closestFace;
-            Vector3 forward = closestFace - closestEdge;
-            forward.z = 0;
-            //transform.up = forward.normalized;
-            transform.position = closestEdge;
-
+            //center.transform.position = closestFace;
+            Vector3 direction = boundingBox.TargetBoundsCenter - closestFace;
+            direction = direction.normalized;
+            transform.position = closestEdge + (transform.rotation * new Vector3 (0, 0.05f, 0));
+            transform.rotation = boundingBox.transform.rotation;
+            transform.forward = direction;
+            transform.position += transform.rotation * new Vector3(0, 0, -0.05f);
         }
 
         private void Update()
